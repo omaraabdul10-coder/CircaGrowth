@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CircaGrowth — an interactive mathematical model of circadian rhythm, glucose-insulin dynamics, and growth hormone secretion." />
+  <title>CircaGrowth — Circadian × Glucose × Insulin × Growth Hormone</title>
+  <style>
+    :root{
+      --bg:#071019; --panel:#0d1823; --panel2:#101e2b; --line:#203244;
+      --text:#edf4f8; --muted:#9aabba; --cyan:#62d7c5; --blue:#6d8cff;
+      --amber:#f1b35b; --red:#ff806f; --violet:#9b8cff; --green:#65d99a;
+      --max:1180px; --shadow:0 20px 70px rgba(0,0,0,.28);
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth}
+    body{margin:0;background:radial-gradient(circle at 15% 0%,#122435 0,#071019 38%,#050b11 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:var(--max);margin:auto;padding:0 24px}
+    .nav{position:sticky;top:0;z-index:10;background:rgba(7,16,25,.78);backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.06)}
+    .navin{height:68px;display:flex;align-items:center;justify-content:space-between}
+    .brand{font-family:Georgia,serif;font-size:20px;letter-spacing:.3px}.brand span{color:var(--cyan)}
+    .navlinks{display:flex;gap:22px;font-size:13px;color:var(--muted)} .navlinks a:hover{color:var(--text)}
+    .hero{padding:92px 0 72px;display:grid;grid-template-columns:1.1fr .9fr;gap:58px;align-items:center}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--cyan);font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase}
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 18px var(--cyan)}
+    h1{font-family:Georgia,serif;font-size:clamp(44px,6vw,76px);line-height:.98;font-weight:500;letter-spacing:-.035em;margin:18px 0 24px}
+    h1 em{font-style:normal;color:var(--cyan)}
+    .lead{font-size:18px;color:#b8c6d1;max-width:690px}
+    .buttons{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+    .btn{padding:11px 16px;border:1px solid var(--line);border-radius:9px;font-size:13px;font-weight:700;background:var(--panel);transition:.2s}
+    .btn.primary{background:var(--cyan);color:#06110f;border-color:var(--cyan)} .btn:hover{transform:translateY(-1px)}
+    .hero-card{background:linear-gradient(145deg,rgba(19,37,51,.92),rgba(9,19,29,.92));border:1px solid #284052;border-radius:18px;padding:24px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+    .hero-card:before{content:"";position:absolute;width:230px;height:230px;right:-80px;top:-90px;border-radius:50%;background:rgba(98,215,197,.12);filter:blur(5px)}
+    .model-mini{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+    .mini{border:1px solid #263a4b;background:rgba(255,255,255,.025);border-radius:10px;padding:13px}.mini b{display:block;font-size:12px}.mini span{color:var(--muted);font-size:11px}
+    section{padding:72px 0}.section-head{max-width:760px;margin-bottom:30px}.kicker{color:var(--cyan);font-size:12px;text-transform:uppercase;letter-spacing:.14em;font-weight:800}.section-head h2{font-family:Georgia,serif;font-size:40px;line-height:1.05;font-weight:500;margin:9px 0 12px}.section-head p{color:var(--muted)}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .card{background:rgba(13,24,35,.78);border:1px solid var(--line);border-radius:14px;padding:21px}
+    .card h3{margin:0 0 8px;font-size:16px}.card p{color:var(--muted);font-size:13px;margin:0}
+    .eq{font-family:"Times New Roman",serif;font-size:21px;background:#071019;border:1px solid #203244;border-radius:12px;padding:18px 20px;margin:10px 0;color:#e7eef3;overflow:auto}
+    .var{display:grid;grid-template-columns:95px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid #1a2a38}.var:last-child{border:0}.var b{color:var(--cyan);font-family:monospace}.var span{color:var(--muted);font-size:13px}
+    .sim{background:linear-gradient(145deg,#0b1621,#0a121a);border:1px solid #294051;border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}.control{background:#0f1c28;border:1px solid #223648;border-radius:11px;padding:15px}
+    .control-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:9px}.value{color:var(--amber);font-weight:800;font-variant-numeric:tabular-nums}
+    input[type=range]{width:100%;accent-color:var(--cyan)}
+    .chartbox{background:#071019;border:1px solid #1d3040;border-radius:12px;padding:12px;margin-top:12px}
+    canvas{display:block;width:100%;height:235px}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.stat{background:#0f1c28;border:1px solid #223648;border-radius:11px;padding:14px}.stat small{display:block;color:var(--muted);font-size:11px}.stat strong{display:block;font-size:22px;margin-top:3px}
+    .validation{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{text-align:left;padding:13px 10px;border-bottom:1px solid #203244}.table th{color:var(--muted);font-weight:600}.good{color:var(--green)}.warn{color:var(--amber)}
+    .timeline{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.step{position:relative;padding:20px 18px 20px 54px}.num{position:absolute;left:17px;top:18px;width:25px;height:25px;border:1px solid #335067;border-radius:50%;display:grid;place-items:center;color:var(--cyan);font-size:11px;font-weight:800}
+    .quote{border-left:2px solid var(--cyan);padding:8px 0 8px 20px;color:#c6d2db;font-family:Georgia,serif;font-size:18px}
+    .refs{columns:2;column-gap:40px}.ref{break-inside:avoid;margin:0 0 14px;color:var(--muted);font-size:12px}.ref b{color:#d8e1e7}
+    footer{border-top:1px solid #1a2a38;padding:35px 0 55px;color:var(--muted);font-size:12px}
+    @media(max-width:850px){.hero{grid-template-columns:1fr;gap:30px}.grid3,.timeline{grid-template-columns:1fr}.grid2,.validation,.controls{grid-template-columns:1fr}.refs{columns:1}.navlinks{display:none}section{padding:55px 0}}
+  </style>
+</head>
+<body>
+<header class="nav"><div class="wrap navin">
+  <a class="brand" href="#">Circa<span>Growth</span></a>
+  <nav class="navlinks"><a href="#purpose">Why it matters</a><a href="#model">Model</a><a href="#simulation">Simulation</a><a href="#validation">Validation</a><a href="#limitations">Limitations</a><a href="#computational">CS / Math</a><a href="#references">References</a></nav>
+</div></header>
+
+<main>
+<section class="hero wrap">
+  <div>
+    <div class="eyebrow"><span class="dot"></span> Computational physiology · student research</div>
+    <h1>When does a late meal <em>matter</em>?</h1>
+    <p class="lead">CircaGrowth is an interactive ordinary-differential-equation model linking circadian rhythm, glucose, insulin, and growth-hormone dynamics to study how meal timing can alter the simulated nocturnal STH peak.</p>
+    <p style="margin-top:14px;color:#d9e4ea;font-size:13px"><strong>Created by Omar Abdullayev</strong> · High School Student · Ganja School No. 39 named after M. C. Pasheyev</p>
+    <div class="buttons"><a class="btn primary" href="#simulation">Explore the simulation</a><a class="btn" href="#method">Read the methodology</a></div>
+  </div>
+  <div class="hero-card">
+    <div class="kicker">The research question</div>
+    <h3 style="font-family:Georgia,serif;font-size:25px;font-weight:500;margin:8px 0 12px">Can the timing of food intake interact with the insulin-sensitive window around the STH peak?</h3>
+    <p style="color:var(--muted);font-size:13px">The model represents glucose, insulin, tissue insulin action, an insulin absorption compartment, and growth hormone as coupled dynamical variables.</p>
+    <div class="model-mini"><div class="mini"><b>G(t)</b><span>glucose</span></div><div class="mini"><b>I(t)</b><span>active insulin</span></div><div class="mini"><b>X(t)</b><span>insulin action</span></div><div class="mini"><b>H(t)</b><span>growth hormone</span></div></div>
+  </div>
+</section>
+
+<section id="model"><div class="wrap">
+  <div class="section-head"><div class="kicker">01 · Mathematical model</div><h2>A coupled dynamical system</h2><p>The computational core is a five-state ODE system. Food intake is represented as Gaussian glucose input, while the revised insulin component uses a pharmacokinetic absorption–clearance compartment.</p></div>
+  <div class="grid2">
+    <div class="card">
+      <div class="eq">dG/dt = R<sub>G</sub>(t) − (p<sub>1</sub> + X)G + p<sub>1</sub>G<sub>b</sub></div>
+      <div class="eq">dX/dt = −p<sub>2</sub>X + p<sub>3</sub>(I − I<sub>b</sub>)</div>
+      <div class="eq">dA/dt = k<sub>a,amp</sub>R<sub>G</sub>(t) − k<sub>a</sub>A</div>
+      <div class="eq">dI/dt = k<sub>a</sub>A + nI<sub>b</sub> − nI</div>
+      <div class="eq">dH/dt = S<sub>H</sub>C(t) · K<sub>I</sub>/(K<sub>I</sub>+I) − k<sub>H</sub>H</div>
+    </div>
+    <div class="card">
+      <h3>State variables</h3>
+      <div class="var"><b>G(t)</b><span>Blood glucose concentration · mg/dL</span></div>
+      <div class="var"><b>X(t)</b><span>Tissue-level insulin activation effect</span></div>
+      <div class="var"><b>A(t)</b><span>Insulin absorption compartment</span></div>
+      <div class="var"><b>I(t)</b><span>Active plasma insulin · µU/mL</span></div>
+      <div class="var"><b>H(t)</b><span>Growth hormone / STH · ng/mL</span></div>
+      <h3 style="margin-top:24px">Circadian drive</h3>
+      <div class="eq">C(t) = max(0, cos(2π(t − t<sub>peak</sub>)/1440))</div>
+      <p style="font-size:12px;color:var(--muted)">Simulation convention: t = 0 corresponds to 08:00; the default STH peak is 02:00.</p>
+    </div>
+  </div>
+</div></section>
+
+<section id="simulation"><div class="wrap">
+  <div class="section-head"><div class="kicker">02 · Live simulation</div><h2>Move the meal. Watch the system respond.</h2><p>This browser implementation solves the same V2 equations with a fixed-step fourth-order Runge–Kutta method (RK4), using a 1-minute step over 24 hours.</p></div>
+  <div class="sim">
+    <div class="controls">
+      <div class="control"><div class="control-top"><span>Dinner time</span><span id="dinnerVal" class="value">19:00</span></div><input id="dinner" type="range" min="8" max="18" step=".1" value="11"></div>
+      <div class="control"><div class="control-top"><span>STH / deep-sleep peak</span><span id="peakVal" class="value">02:00</span></div><input id="peak" type="range" min="13" max="22" step=".1" value="18"></div>
+    </div>
+    <div class="chartbox"><canvas id="chartG"></canvas></div>
+    <div class="chartbox"><canvas id="chartI"></canvas></div>
+    <div class="chartbox"><canvas id="chartH"></canvas></div>
+    <div class="stats">
+      <div class="stat"><small>Simulated STH peak</small><strong id="hPeak">—</strong></div>
+      <div class="stat"><small>Change vs no-dinner control</small><strong id="suppression">—</strong></div>
+      <div class="stat"><small>Model state</small><strong id="state" style="color:var(--green);font-size:17px">Stable</strong></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="method"><div class="wrap">
+  <div class="section-head"><div class="kicker">03 · Research process</div><h2>The important part was not only getting a curve.</h2><p>The V1 model failed a face-validity test. Debugging exposed two structural issues, leading to the V2 formulation used here.</p></div>
+  <div class="timeline">
+    <div class="card step"><span class="num">01</span><h3>Face-validity test</h3><p>A meal close to the STH peak should suppress the simulated STH peak more than a meal far from it.</p></div>
+    <div class="card step"><span class="num">02</span><h3>Root-cause analysis</h3><p>The original setup had an inconsistent equilibrium and a threshold insulin rule that produced an underdamped oscillatory response.</p></div>
+    <div class="card step"><span class="num">03</span><h3>Mathematical revision</h3><p>The equilibrium was made internally consistent and insulin secretion was replaced by an absorption–clearance compartment.</p></div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="quote">A key methodological lesson: parameters cannot safely be transplanted between sub-models without checking the context, time scale, inputs, and whether a variable is measured or modeled.</div></div>
+</div></section>
+
+<section id="validation"><div class="wrap">
+  <div class="section-head"><div class="kicker">04 · Validation</div><h2>V2 reproduced the expected directional behavior.</h2><p>The three-scenario validation compares a no-dinner control, an early dinner at 15:00, and a late dinner at 23:18.</p></div>
+  <div class="validation">
+    <div class="card">
+      <table class="table"><thead><tr><th>Scenario</th><th>STH peak</th><th>vs control</th><th>Direction</th></tr></thead>
+      <tbody>
+        <tr><td>Control</td><td>13.42 ng/mL</td><td>—</td><td class="good">Baseline</td></tr>
+        <tr><td>Early dinner · 15:00</td><td>13.42 ng/mL</td><td>+0.0%</td><td class="good">No effect ✓</td></tr>
+        <tr><td>Late dinner · 23:18</td><td>11.54 ng/mL</td><td>−14.0%</td><td class="good">Suppression ✓</td></tr>
+      </tbody></table>
+    </div>
+    <div class="card"><h3>What the validation means</h3><p>The model produces the expected ordering: a meal positioned close to the modeled nocturnal STH peak produces a larger simulated suppression than an early meal. This is a model-behavior validation, not a clinical validation.</p><div style="height:14px"></div><p class="warn">Important: the project is a computational proof-of-concept and should not be interpreted as a medical recommendation.</p></div>
+  </div>
+</div></section>
+
+<section id="limitations"><div class="wrap">
+  <div class="section-head"><div class="kicker">05 · Limitations</div><h2>What the model does not claim.</h2><p>Keeping limitations visible makes the project more credible as a research artifact.</p></div>
+  <div class="grid2">
+    <div class="card"><h3>Single-person abstraction</h3><p>Age, sex, body mass, insulin sensitivity, and individual variation are not represented.</p></div>
+    <div class="card"><h3>Parameter context</h3><p>Bergman minimal-model parameters came from an IVGTT context and are not fully adapted to meal-response data.</p></div>
+    <div class="card"><h3>Empirical PK calibration</h3><p>The insulin absorption parameter k<sub>a</sub> was empirically calibrated in this work rather than directly taken from one literature source.</p></div>
+    <div class="card"><h3>Simplified STH rhythm</h3><p>The circadian drive is a simple cosine with one modeled night peak rather than realistic multi-pulse ultradian secretion.</p></div>
+    <div class="card"><h3>24-hour horizon</h3><p>The current experiment covers one 24-hour cycle and does not model cumulative multi-day sleep disruption effects.</p></div>
+    <div class="card"><h3>Not clinical validation</h3><p>No conclusion about individual health outcomes should be drawn from this simulation alone.</p></div>
+  </div>
+</div></section>
+
+
+
+<section id="purpose"><div class="wrap">
+  <div class="section-head"><div class="kicker">06 · Why does this matter?</div><h2>From a mathematical model to a biological question.</h2><p>CircaGrowth is designed to explore how the timing of food intake may interact with the physiological dynamics surrounding nocturnal growth-hormone secretion.</p></div>
+  <div class="grid3">
+    <div class="card"><h3>Child & adolescent growth</h3><p>Growth hormone is one component of the biological system involved in childhood and adolescent growth. The model provides a way to study, computationally, how meal timing could interact with the modeled STH signal during a nocturnal peak.</p></div>
+    <div class="card"><h3>Muscle & tissue growth</h3><p>Growth hormone participates in physiological processes associated with tissue growth and metabolism. CircaGrowth does not directly simulate muscle hypertrophy; instead, it models STH dynamics as a mechanistic intermediate that could be studied in future, more complete models.</p></div>
+    <div class="card"><h3>Metabolic timing</h3><p>Glucose and insulin dynamics are included because the model treats insulin as a time-dependent suppressing input to the STH equation. This lets the simulation ask when the timing of a meal matters most within the modeled system.</p></div>
+    <div class="card"><h3>Sleep & circadian biology</h3><p>The model represents a circadian drive for STH secretion and places a modeled peak in the night. This creates a computational framework for exploring interactions between feeding time and the sleep-associated hormonal window.</p></div>
+    <div class="card"><h3>Personalized modeling — future direction</h3><p>A future version could vary parameters for insulin sensitivity, body size, age-related physiology, or other experimentally justified factors. The current project deliberately remains a simplified single-person abstraction.</p></div>
+    <div class="card"><h3>Research, not medical advice</h3><p>The purpose is hypothesis generation and computational experimentation. The simulation does not establish that changing dinner time will increase height, muscle mass, or any individual health outcome.</p></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="quote">The central idea is not to claim that the simulation predicts human growth. It is to build a transparent mathematical system that lets a researcher ask: under a defined set of assumptions, how does meal timing propagate through glucose and insulin dynamics into the modeled STH signal?</div>
+  </div>
+</div></section>
+
+<section id="computational"><div class="wrap">
+  <div class="section-head"><div class="kicker">07 · Computational architecture</div><h2>From equations to executable science.</h2><p>CircaGrowth is not only a biological narrative. The project turns a coupled mathematical model into a reproducible computational pipeline: define the state, evaluate the vector field, integrate the system, validate behavior, and expose the parameters through an interactive interface.</p></div>
+  <div class="grid3">
+    <div class="card"><h3>State-space formulation</h3><p>The model is represented as y′ = f(t,y;θ), where y = [G, X, A, I, H]. This makes every simulated quantity explicit and separates the dynamical state from parameters and external inputs.</p></div>
+    <div class="card"><h3>Numerical integration</h3><p>The browser implementation uses classical fourth-order Runge–Kutta integration. A fixed Δt = 1 minute gives 1,440 integration steps across a 24-hour experiment.</p></div>
+    <div class="card"><h3>Deterministic simulation</h3><p>For identical parameters and meal schedules, the solver produces the same trajectory. This makes parameter sweeps, controlled comparisons, and debugging reproducible.</p></div>
+    <div class="card"><h3>Complexity</h3><p>For this five-state system, each RK4 step evaluates the vector field four times. For N time steps, the numerical work is O(N·d), with d = 5 state variables, apart from plotting overhead.</p></div>
+    <div class="card"><h3>Separation of concerns</h3><p>The implementation separates the model equations, numerical solver, chart transformation, controls, and visualization. That structure makes the scientific core independently inspectable.</p></div>
+    <div class="card"><h3>Model → interface</h3><p>The dashboard does not hard-code a single result. Moving a control changes the input conditions, reruns the solver, and recomputes the STH peak relative to a control simulation.</p></div>
+  </div>
+</div></section>
+
+<section id="numerics"><div class="wrap">
+  <div class="section-head"><div class="kicker">08 · Numerical methods</div><h2>Why RK4?</h2><p>The computational method is part of the research, not an implementation detail hidden behind a graph.</p></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Classical RK4 update</h3>
+      <div class="eq">k₁ = f(t, y)</div>
+      <div class="eq">k₂ = f(t + Δt/2, y + Δt·k₁/2)</div>
+      <div class="eq">k₃ = f(t + Δt/2, y + Δt·k₂/2)</div>
+      <div class="eq">k₄ = f(t + Δt, y + Δt·k₃)</div>
+      <div class="eq">y(t+Δt) = y(t) + Δt(k₁ + 2k₂ + 2k₃ + k₄)/6</div>
+    </div>
+    <div class="card">
+      <h3>Numerical reasoning</h3>
+      <p style="color:var(--muted);font-size:13px">The original Python implementation used SciPy's adaptive RK45 solver with tight tolerances and a maximum step of 1 minute. The interactive browser version independently implements fixed-step RK4 at the same 1-minute scale.</p>
+      <div class="quote" style="margin-top:18px">A useful computational question is not “does the graph look right?” but “does the numerical solution remain stable and consistent when the solver and step size are changed?”</div>
+      <p style="color:var(--muted);font-size:13px;margin-top:18px">A future numerical-validation module could compare RK4 against adaptive RK45, perform step-size convergence tests, and report maximum trajectory differences.</p>
+    </div>
+  </div>
+</div></section>
+
+<section id="sensitivity"><div class="wrap">
+  <div class="section-head"><div class="kicker">09 · Experimental design</div><h2>Turn one simulation into a computational experiment.</h2><p>The current interface changes dinner time and the modeled STH peak. The same architecture can support systematic parameter sweeps rather than relying on one hand-picked scenario.</p></div>
+  <div class="grid3">
+    <div class="card"><h3>One-factor sweeps</h3><p>Vary dinner time across the available window while keeping all other parameters fixed. Record the STH peak for every condition.</p></div>
+    <div class="card"><h3>Two-dimensional maps</h3><p>Sweep both dinner time and STH-peak timing to create a response surface showing where the model is most sensitive.</p></div>
+    <div class="card"><h3>Robustness analysis</h3><p>Perturb parameters such as k<sub>a</sub>, K<sub>I</sub>, and k<sub>H</sub> and quantify whether the qualitative conclusion survives plausible changes.</p></div>
+    <div class="card"><h3>Control design</h3><p>Every intervention scenario is compared with a matched no-dinner control using the same STH-peak timing.</p></div>
+    <div class="card"><h3>Reproducible outputs</h3><p>For each run, the model can store the input parameters, meal schedule, trajectory, peak value, and derived suppression metric.</p></div>
+    <div class="card"><h3>Future extension</h3><p>A next version could export parameter-sweep data as CSV/JSON and generate publication-ready response surfaces and uncertainty plots.</p></div>
+  </div>
+</div></section>
+
+<section id="debugging"><div class="wrap">
+  <div class="section-head"><div class="kicker">10 · Debugging as research</div><h2>The failed model became part of the scientific result.</h2><p>The V1→V2 transition is one of the strongest computational parts of the project because the model was tested against a biological face-validity expectation rather than accepted simply because it produced smooth curves.</p></div>
+  <div class="grid2">
+    <div class="card"><h3>Failure mode 1 · equilibrium consistency</h3><p>The initial parameter combination did not satisfy the model's own equilibrium condition. The resulting trajectory drifted from the intended baseline, making scenario comparisons unreliable.</p><div class="eq">γ(G<sub>b</sub> − h) = nI<sub>b</sub></div><p style="color:var(--muted);font-size:12px">Resolution: recalculate the relevant parameter so the initial state is mathematically consistent with the equilibrium condition.</p></div>
+    <div class="card"><h3>Failure mode 2 · oscillatory insulin response</h3><p>A hard glucose threshold coupled to the insulin-action dynamics created an underdamped response in V1. Insulin could collapse after meals, producing the wrong qualitative effect on simulated STH.</p><p style="color:var(--muted);font-size:12px">Resolution: replace the threshold secretion mechanism with an absorption–clearance compartment A(t), producing a smoother meal-response dynamic.</p></div>
+  </div>
+</div></section>
+
+<section id="references"><div class="wrap">
+  <div class="section-head"><div class="kicker">11 · References</div><h2>Scientific foundations</h2><p>References listed in the project methodology document.</p></div>
+  <div class="card refs">
+    <div class="ref"><b>Bergman, R. N., et al. (1981).</b> Physiological evaluation of factors controlling glucose tolerance in man. American Journal of Physiology-Endocrinology and Metabolism, 241(6), E451–E463.</div>
+    <div class="ref"><b>Hartman, M. L., et al. (1992).</b> Pulsatile growth hormone secretion in normal man. The Journal of Clinical Investigation, 89(5), 1588–1599.</div>
+    <div class="ref"><b>Polonsky, K. S., et al. (1988).</b> Study cited in the methodology for insulin clearance.</div>
+    <div class="ref"><b>Schwarz, J. M., et al. (1995).</b> Short-term alterations in carbohydrate intake modulate the 24-hour plasma GH concentration. Journal of Clinical Endocrinology &amp; Metabolism, 80(5), 1578–1588.</div>
+    <div class="ref"><b>Topp, B., et al. (2000).</b> A model of β-cell mass, insulin, and glucose kinetics. Journal of Theoretical Biology.</div>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><b style="color:#dce6eb">CircaGrowth</b><br><span>Created by Omar Abdullayev · High School Student · Ganja School No. 39 named after M. C. Pasheyev</span><br><span>ODE modeling · applied mathematics · numerical methods · scientific computing · interactive visualization · reproducible computational experiments.</span></div></footer>
+
+<script>
+const P={Gb:85,Ib:9,n:.135,kH:.040,KI:13.5,p1:.028,p2:.025,p3:1.3e-5,SH:.9,amp:1.15,width:25,ka:.045,kaAmp:6};
+const dt=1, steps=1440;
+function mealSignal(t,meals){let s=0; for(const mt of meals){const d=(t-mt)/P.width;s+=P.amp*Math.exp(-.5*d*d)}return s}
+function circadian(t,tp){return Math.max(0,Math.cos(2*Math.PI*(t-tp)/1440))}
+function deriv(t,y,meals,tp){
+  const [G,X,A,I,H]=y,RG=mealSignal(t,meals);
+  return [RG-(P.p1+X)*G+P.p1*P.Gb,-P.p2*X+P.p3*(I-P.Ib),P.kaAmp*RG-P.ka*A,P.ka*A+P.n*P.Ib-P.n*I,P.SH*circadian(t,tp)*(P.KI/(P.KI+I))-P.kH*H];
+}
+function add(y,k,h){return y.map((v,i)=>v+h*k[i])}
+function solve(meals,tp){
+  let y=[P.Gb,0,0,P.Ib,.05],out={t:[],G:[],I:[],H:[]};
+  for(let i=0;i<=steps;i++){const t=i*dt;out.t.push(t/60);out.G.push(y[0]);out.I.push(y[3]);out.H.push(y[4]);
+    const k1=deriv(t,y,meals,tp),k2=deriv(t+.5,add(y,k1,.5),meals,tp),k3=deriv(t+.5,add(y,k2,.5),meals,tp),k4=deriv(t+1,add(y,k3,1),meals,tp);
+    y=y.map((v,j)=>v+(k1[j]+2*k2[j]+2*k3[j]+k4[j])/6)}
+  return out;
+}
+function wall(h){let w=((h+8)%24+24)%24,hh=Math.floor(w),mm=Math.round((w-hh)*60);if(mm===60){hh=(hh+1)%24;mm=0}return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')}
+function draw(canvas,sol,key,label,unit,stroke,tp){
+  const dpr=devicePixelRatio||1,rect=canvas.getBoundingClientRect();canvas.width=rect.width*dpr;canvas.height=235*dpr;
+  const c=canvas.getContext('2d');c.scale(dpr,dpr);const W=rect.width,H=235;
+  c.clearRect(0,0,W,H);c.fillStyle='#071019';c.fillRect(0,0,W,H);
+  const vals=sol[key],min=Math.min(...vals),max=Math.max(...vals),pad=(max-min)*.12||1,y0=min-pad,y1=max+pad;
+  const x=t=>42+(t/24)*(W-58),y=v=>H-30-((v-y0)/(y1-y0))*(H-50);
+  c.strokeStyle='#1e3040';c.lineWidth=1;c.font='10px system-ui';c.fillStyle='#8fa0ad';
+  for(let i=0;i<=4;i++){const yy=20+i*(H-50)/4;c.beginPath();c.moveTo(42,yy);c.lineTo(W-16,yy);c.stroke();const v=y1-(i/4)*(y1-y0);c.fillText(v.toFixed(key==='G'?0:1),5,yy+3)}
+  [0,6,12,18,24].forEach(t=>{const xx=x(t);c.fillText(wall(t),xx-15,H-8)});
+  const sleepS=Math.max(0,tp-4),sleepE=Math.min(24,tp+4);c.fillStyle='rgba(155,140,255,.09)';c.fillRect(x(sleepS),20,x(sleepE)-x(sleepS),H-50);
+  c.strokeStyle=stroke;c.lineWidth=2;c.beginPath();sol.t.forEach((t,i)=>{const xx=x(t),yy=y(vals[i]);if(i===0)c.moveTo(xx,yy);else c.lineTo(xx,yy)});c.stroke();
+  c.fillStyle='#dce6eb';c.font='600 12px system-ui';c.fillText(label,48,17);c.fillStyle='#8293a0';c.font='10px system-ui';c.fillText(unit,W-70,17);
+}
+function render(){
+  const dinner=+document.querySelector('#dinner').value, peak=+document.querySelector('#peak').value;
+  document.querySelector('#dinnerVal').textContent=wall(dinner);document.querySelector('#peakVal').textContent=wall(peak);
+  const tp=peak*60,meals=[8*60,13*60,dinner*60],sol=solve(meals,tp),ctrl=solve([8*60,13*60],tp);
+  const hp=Math.max(...sol.H),hc=Math.max(...ctrl.H),sup=(hc-hp)/hc*100;
+  draw(document.querySelector('#chartG'),sol,'G','Glucose','mg/dL','#f1b35b',peak);
+  draw(document.querySelector('#chartI'),sol,'I','Insulin','µU/mL','#6d8cff',peak);
+  draw(document.querySelector('#chartH'),sol,'H','Growth hormone (STH)','ng/mL','#62d7c5',peak);
+  document.querySelector('#hPeak').textContent=hp.toFixed(2)+' ng/mL';
+  const el=document.querySelector('#suppression');el.textContent=(sup>0.05?'−':'≈ ')+Math.abs(sup).toFixed(1)+'%';el.style.color=sup>.5?'#ff806f':'#9aabba';
+}
+document.querySelector('#dinner').addEventListener('input',render);document.querySelector('#peak').addEventListener('input',render);window.addEventListener('resize',render);render();
+</script>
+</body>
+</html>
