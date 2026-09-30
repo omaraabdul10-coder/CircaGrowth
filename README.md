@@ -1,41 +1,70 @@
-# CircaGrowth — Interactive Research Website
+# CircaGrowth
 
-This is a GitHub Pages-ready, dependency-free research showcase for the CircaGrowth V2 computational model.
+### Circadian Rhythm × Glucose × Insulin × Growth Hormone
 
-## Run locally
-Open `index.html` in a browser.
+**Created by Omar Abdullayev**  
+High School Student  
+Ganja School No. 39 named after M. C. Pasheyev
 
-## Publish on GitHub Pages
-1. Create a new GitHub repository, e.g. `circagrowth`.
-2. Upload `index.html` and the `README.md`.
-3. Open **Settings → Pages**.
-4. Under **Build and deployment**, choose **Deploy from a branch**.
-5. Select `main` and `/ (root)`, then save.
-6. GitHub will provide the public Pages URL.
+---
 
-## What is included
-- Research-focused landing page
-- Mathematical equations and state variables
-- Interactive 24-hour RK4 simulation
-- Dinner-time and STH-peak controls
-- Glucose / insulin / STH charts
-- V2 debugging story
-- Validation table using the project report's reported values
-- Limitations and references
+## Overview
 
-## Scientific scope
-The website communicates the supplied CircaGrowth V2 model as a computational proof-of-concept. It does not present the simulation as clinical validation or a medical recommendation.
+CircaGrowth is a computational physiology research project that uses a coupled system of ordinary differential equations (ODEs) to investigate the interaction between:
 
-## Source basis
-The implementation follows the supplied V2 Python model and methodology report, including the five-state ODE system, Gaussian meal input, circadian signal, PK insulin compartment, and 24-hour RK4 browser simulation.
+- Circadian rhythm
+- Glucose dynamics
+- Insulin dynamics
+- Insulin tissue action
+- Growth hormone (STH) secretion
 
+The central research question is:
 
-## Academic framing
+> How can the timing of food intake interact with the physiological dynamics surrounding nocturnal growth-hormone secretion?
 
-The website is intentionally structured to demonstrate both the applied-mathematics and computer-science sides of the project:
+The project approaches this question through mathematical modeling and numerical simulation rather than through a clinical experiment.
 
-- **Applied mathematics:** state-space ODE formulation, equilibrium consistency, nonlinear coupling, numerical integration, parameter sensitivity, control comparisons, and model validation.
-- **Computer science:** deterministic numerical solver, modular computational architecture, interactive parameterization, data transformation, visualization, and reproducibility.
-- **Research methodology:** face-validity testing, failure analysis, root-cause debugging, controlled scenarios, explicit limitations, and proposed robustness experiments.
+---
 
-The site should be presented as a computational modeling/research artifact rather than as a clinical application.
+## Why Does This Matter?
+
+Growth hormone is involved in physiological processes associated with childhood and adolescent growth, tissue development, metabolism, and other biological processes.
+
+CircaGrowth does **not** directly predict human height or muscle growth.
+
+Instead, it models growth-hormone dynamics as an intermediate physiological component and investigates how meal timing can affect the simulated STH signal under a defined mathematical model.
+
+Potential research directions include:
+
+- studying meal timing during childhood and adolescence;
+- investigating the relationship between metabolic signals and nocturnal STH secretion;
+- exploring physiological timing around sleep;
+- developing more individualized computational models;
+- extending the model toward tissue or muscle-growth dynamics in future work.
+
+The project should therefore be understood as a **computational modeling and hypothesis-generation framework**, not as medical advice or clinical validation.
+
+---
+
+## Mathematical Model
+
+The model consists of five state variables:
+
+- `G(t)` — blood glucose concentration
+- `X(t)` — tissue-level insulin activation
+- `A(t)` — insulin absorption compartment
+- `I(t)` — active plasma insulin
+- `H(t)` — growth hormone / STH
+
+The system is:
+
+```text
+dG/dt = R_G(t) − (p1 + X)G + p1G_b
+
+dX/dt = −p2X + p3(I − I_b)
+
+dA/dt = k_a,amp R_G(t) − k_aA
+
+dI/dt = k_aA + nI_b − nI
+
+dH/dt = S_H C(t) [K_I / (K_I + I)] − k_HH
