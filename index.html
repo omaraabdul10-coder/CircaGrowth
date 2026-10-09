@@ -96,17 +96,17 @@
       <div class="var"><b>H(t)</b><span>Growth hormone / STH · ng/mL</span></div>
       <h3 style="margin-top:24px">Circadian drive</h3>
       <div class="eq">C(t) = max(0, cos(2π(t − t<sub>peak</sub>)/1440))</div>
-      <p style="font-size:12px;color:var(--muted)">Simulation convention: t = 0 corresponds to 08:00; the default STH peak is 02:00.</p>
+      <p style="font-size:12px;color:var(--muted)">Simulation convention: t is wall-clock time (minutes from 00:00). Meals at 08:00 and 13:00 every day plus an optional dinner; the default STH peak is 02:00. The model is run for 3 days and the night of day 2 → 3 is reported, so results do not depend on the initial state.</p>
     </div>
   </div>
 </div></section>
 
 <section id="simulation"><div class="wrap">
-  <div class="section-head"><div class="kicker">02 · Live simulation</div><h2>Move the meal. Watch the system respond.</h2><p>This browser implementation solves the same V2 equations with a fixed-step fourth-order Runge–Kutta method (RK4), using a 1-minute step over 24 hours.</p></div>
+  <div class="section-head"><div class="kicker">02 · Live simulation</div><h2>Move the meal. Watch the system respond.</h2><p>This browser implementation solves the same V2 equations with a fixed-step fourth-order Runge–Kutta method (RK4), using a 1-minute step over 3 days; the charts show the last 24 hours (12:00 → 12:00).</p></div>
   <div class="sim">
     <div class="controls">
-      <div class="control"><div class="control-top"><span>Dinner time</span><span id="dinnerVal" class="value">19:00</span></div><input id="dinner" type="range" min="8" max="18" step=".1" value="11"></div>
-      <div class="control"><div class="control-top"><span>STH / deep-sleep peak</span><span id="peakVal" class="value">02:00</span></div><input id="peak" type="range" min="13" max="22" step=".1" value="18"></div>
+      <div class="control"><div class="control-top"><span>Dinner time</span><span id="dinnerVal" class="value">19:00</span></div><input id="dinner" type="range" min="15" max="26" step=".1" value="19"></div>
+      <div class="control"><div class="control-top"><span>STH / deep-sleep peak</span><span id="peakVal" class="value">02:00</span></div><input id="peak" type="range" min="22" max="28" step=".1" value="26"></div>
     </div>
     <div class="chartbox"><canvas id="chartG"></canvas></div>
     <div class="chartbox"><canvas id="chartI"></canvas></div>
@@ -130,17 +130,20 @@
 </div></section>
 
 <section id="validation"><div class="wrap">
-  <div class="section-head"><div class="kicker">04 · Validation</div><h2>V2 reproduced the expected directional behavior.</h2><p>The three-scenario validation compares a no-dinner control, an early dinner at 15:00, and a late dinner at 23:18.</p></div>
+  <div class="section-head"><div class="kicker">04 · Validation</div><h2>V2 reproduced the expected directional behavior.</h2><p>The three-scenario validation compares a no-dinner control with dinners at increasing distance from the modeled STH peak (02:00).</p></div>
   <div class="validation">
     <div class="card">
       <table class="table"><thead><tr><th>Scenario</th><th>STH peak</th><th>vs control</th><th>Direction</th></tr></thead>
       <tbody>
         <tr><td>Control</td><td>13.42 ng/mL</td><td>—</td><td class="good">Baseline</td></tr>
-        <tr><td>Early dinner · 15:00</td><td>13.42 ng/mL</td><td>+0.0%</td><td class="good">No effect ✓</td></tr>
-        <tr><td>Late dinner · 23:18</td><td>11.54 ng/mL</td><td>−14.0%</td><td class="good">Suppression ✓</td></tr>
+        <tr><td>Early dinner · 15:00</td><td>13.42 ng/mL</td><td>0.0%</td><td class="good">No effect ✓</td></tr>
+        <tr><td>Dinner · 21:00</td><td>13.42 ng/mL</td><td>0.0%</td><td class="good">No effect</td></tr>
+        <tr><td>Late dinner · 23:00</td><td>13.28 ng/mL</td><td>−1.0%</td><td class="good">Small suppression</td></tr>
+        <tr><td>Night meal · 00:00</td><td>12.84 ng/mL</td><td>−4.3%</td><td class="good">Suppression</td></tr>
+        <tr><td>Night meal · 01:18 (≈45 min before peak)</td><td>11.54 ng/mL</td><td>−14.0%</td><td class="good">Maximum suppression ✓</td></tr>
       </tbody></table>
     </div>
-    <div class="card"><h3>What the validation means</h3><p>The model produces the expected ordering: a meal positioned close to the modeled nocturnal STH peak produces a larger simulated suppression than an early meal. This is a model-behavior validation, not a clinical validation.</p><div style="height:14px"></div><p class="warn">Important: the project is a computational proof-of-concept and should not be interpreted as a medical recommendation.</p></div>
+    <div class="card"><h3>What the validation means</h3><p>The model produces the expected ordering: a meal positioned close to the modeled nocturnal STH peak produces a larger simulated suppression than an early meal. Because modeled insulin is cleared quickly (half-life ≈ 5 min), the effect is confined to roughly the last 2 hours before the peak: in this model a 23:00 dinner changes the peak by only about 1%. This is a model-behavior validation, not a clinical validation.</p><p style="font-size:12px;color:var(--muted)">Correction (Oct 2026): an earlier version of this table labeled the −14% scenario as a 23:18 dinner. That label came from a clock-offset error between the meal times and the displayed time; the −14% case is a meal at about 01:18.</p><div style="height:14px"></div><p class="warn">Important: the project is a computational proof-of-concept and should not be interpreted as a medical recommendation.</p></div>
   </div>
 </div></section>
 
@@ -241,22 +244,26 @@
 
 <script>
 const P={Gb:85,Ib:9,n:.135,kH:.040,KI:13.5,p1:.028,p2:.025,p3:1.3e-5,SH:.9,amp:1.15,width:25,ka:.045,kaAmp:6};
-const dt=1, steps=1440;
-function mealSignal(t,meals){let s=0; for(const mt of meals){const d=(t-mt)/P.width;s+=P.amp*Math.exp(-.5*d*d)}return s}
+const dt=1, DAYS=3, steps=DAYS*1440;
+function mealSignal(t,meals){let s=0; for(const mt of meals){const d=(t-mt)/P.width; if(Math.abs(d)<8) s+=P.amp*Math.exp(-.5*d*d)}return s}
 function circadian(t,tp){return Math.max(0,Math.cos(2*Math.PI*(t-tp)/1440))}
 function deriv(t,y,meals,tp){
   const [G,X,A,I,H]=y,RG=mealSignal(t,meals);
   return [RG-(P.p1+X)*G+P.p1*P.Gb,-P.p2*X+P.p3*(I-P.Ib),P.kaAmp*RG-P.ka*A,P.ka*A+P.n*P.Ib-P.n*I,P.SH*circadian(t,tp)*(P.KI/(P.KI+I))-P.kH*H];
 }
 function add(y,k,h){return y.map((v,i)=>v+h*k[i])}
+function mealsFor(dinnerH){const m=[];for(let d=0;d<=DAYS;d++){m.push(d*1440+480,d*1440+780);if(dinnerH!==null)m.push(d*1440+dinnerH*60)}return m}
+// t = wall-clock minutes from 00:00 of day 0. Reported window: 12:00 day 1 -> 12:00 day 2.
 function solve(meals,tp){
+  const w0=1440+720,w1=2*1440+720;
   let y=[P.Gb,0,0,P.Ib,.05],out={t:[],G:[],I:[],H:[]};
-  for(let i=0;i<=steps;i++){const t=i*dt;out.t.push(t/60);out.G.push(y[0]);out.I.push(y[3]);out.H.push(y[4]);
+  for(let i=0;i<=steps;i++){const t=i*dt;
+    if(t>=w0&&t<=w1){out.t.push((t-w0)/60);out.G.push(y[0]);out.I.push(y[3]);out.H.push(y[4])}
     const k1=deriv(t,y,meals,tp),k2=deriv(t+.5,add(y,k1,.5),meals,tp),k3=deriv(t+.5,add(y,k2,.5),meals,tp),k4=deriv(t+1,add(y,k3,1),meals,tp);
     y=y.map((v,j)=>v+(k1[j]+2*k2[j]+2*k3[j]+k4[j])/6)}
   return out;
 }
-function wall(h){let w=((h+8)%24+24)%24,hh=Math.floor(w),mm=Math.round((w-hh)*60);if(mm===60){hh=(hh+1)%24;mm=0}return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')}
+function wall(h){let w=((h)%24+24)%24,hh=Math.floor(w),mm=Math.round((w-hh)*60);if(mm===60){hh=(hh+1)%24;mm=0}return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')}
 function draw(canvas,sol,key,label,unit,stroke,tp){
   const dpr=devicePixelRatio||1,rect=canvas.getBoundingClientRect();canvas.width=rect.width*dpr;canvas.height=235*dpr;
   const c=canvas.getContext('2d');c.scale(dpr,dpr);const W=rect.width,H=235;
@@ -265,15 +272,15 @@ function draw(canvas,sol,key,label,unit,stroke,tp){
   const x=t=>42+(t/24)*(W-58),y=v=>H-30-((v-y0)/(y1-y0))*(H-50);
   c.strokeStyle='#1e3040';c.lineWidth=1;c.font='10px system-ui';c.fillStyle='#8fa0ad';
   for(let i=0;i<=4;i++){const yy=20+i*(H-50)/4;c.beginPath();c.moveTo(42,yy);c.lineTo(W-16,yy);c.stroke();const v=y1-(i/4)*(y1-y0);c.fillText(v.toFixed(key==='G'?0:1),5,yy+3)}
-  [0,6,12,18,24].forEach(t=>{const xx=x(t);c.fillText(wall(t),xx-15,H-8)});
-  const sleepS=Math.max(0,tp-4),sleepE=Math.min(24,tp+4);c.fillStyle='rgba(155,140,255,.09)';c.fillRect(x(sleepS),20,x(sleepE)-x(sleepS),H-50);
+  [0,6,12,18,24].forEach(t=>{const xx=x(t);c.fillText(wall(t+12),xx-15,H-8)});
+  const tpc=((tp-12)%24+24)%24,sleepS=Math.max(0,tpc-4),sleepE=Math.min(24,tpc+4);c.fillStyle='rgba(155,140,255,.09)';c.fillRect(x(sleepS),20,x(sleepE)-x(sleepS),H-50);
   c.strokeStyle=stroke;c.lineWidth=2;c.beginPath();sol.t.forEach((t,i)=>{const xx=x(t),yy=y(vals[i]);if(i===0)c.moveTo(xx,yy);else c.lineTo(xx,yy)});c.stroke();
   c.fillStyle='#dce6eb';c.font='600 12px system-ui';c.fillText(label,48,17);c.fillStyle='#8293a0';c.font='10px system-ui';c.fillText(unit,W-70,17);
 }
 function render(){
   const dinner=+document.querySelector('#dinner').value, peak=+document.querySelector('#peak').value;
   document.querySelector('#dinnerVal').textContent=wall(dinner);document.querySelector('#peakVal').textContent=wall(peak);
-  const tp=peak*60,meals=[8*60,13*60,dinner*60],sol=solve(meals,tp),ctrl=solve([8*60,13*60],tp);
+  const tp=peak*60,sol=solve(mealsFor(dinner),tp),ctrl=solve(mealsFor(null),tp);
   const hp=Math.max(...sol.H),hc=Math.max(...ctrl.H),sup=(hc-hp)/hc*100;
   draw(document.querySelector('#chartG'),sol,'G','Glucose','mg/dL','#f1b35b',peak);
   draw(document.querySelector('#chartI'),sol,'I','Insulin','µU/mL','#6d8cff',peak);
