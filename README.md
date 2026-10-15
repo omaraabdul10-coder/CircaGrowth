@@ -101,3 +101,8 @@ Because modeled insulin is cleared quickly (half-life ≈ 5 min), suppression is
 - Bergman minimal-model parameters come from IVGTT studies, not mixed-meal data; `k_a`, `k_a,amp` and `S_H` are set by hand.
 - `C(t)` is a single broad nightly cosine; real GH secretion is pulsatile.
 - Single-person model, no inter-individual variation, not validated against human data. Not medical advice.
+
+
+## Acknowledgements
+
+I thank Prof. Morten Gram Pedersen (Department of Information Engineering, University of Padova) for feedback on the secretion model, including the suggestion that, for the slow rhythms studied here, a deterministic secretion rate is adequate and a simple Hill function of glucose is sufficient for modeling insulin secretion. Any remaining errors are my own.
