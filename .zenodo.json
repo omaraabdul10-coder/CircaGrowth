@@ -1,0 +1,10 @@
+{
+  "title": "CircaGrowth: an ODE model of circadian rhythm, glucose, insulin and growth-hormone (STH) dynamics",
+  "upload_type": "software",
+  "creators": [
+    {"name": "Abdullayev, Omar", "affiliation": "School No. 39 named after M. C. Pashayev, Ganja, Azerbaijan"}
+  ],
+  "description": "CircaGrowth couples a Bergman-type glucose-insulin model with a circadian growth-hormone (STH) secretion term to study how meal timing interacts with nocturnal STH secretion. In the current model, a 23:00 dinner lowers the simulated STH peak by about 1%, and a meal about 45 minutes before the peak lowers it by about 14%. Known limitations are listed in the README. The model is a hypothesis-generation tool, not validated against human data and not medical advice.",
+  "license": "MIT",
+  "keywords": ["computational physiology", "circadian rhythm", "growth hormone", "insulin", "meal timing", "ODE model"]
+}
